@@ -95,11 +95,12 @@
         <executions>
           <execution>
             <id>check-java8-api</id>
-            <phase>compile</phase>
+            <phase>test-compile</phase>
             <goals>
               <goal>check</goal>
             </goals>
             <configuration>
+              <checkTestClasses>true</checkTestClasses>
               <signature>
                 <groupId>org.codehaus.mojo.signature</groupId>
                 <artifactId>java18</artifactId>
