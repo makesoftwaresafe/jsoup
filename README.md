@@ -44,7 +44,7 @@ Maven:
   <!-- jsoup HTML parser library @ https://jsoup.org/ -->
   <groupId>org.jsoup</groupId>
   <artifactId>jsoup</artifactId>
-  <version>1.23.1</version>
+  <version>1.23.2</version>
 </dependency>
 ```
 

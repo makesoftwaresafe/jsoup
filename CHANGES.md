@@ -1,20 +1,19 @@
 # jsoup Changelog
 
-## 1.23.2 (pending)
+## 1.23.2 (2026-Aug-26)
 
 ### Improvements
-* Improved consecutive `StreamParser.selectFirst(...)` calls during progressive parsing, so later matches are returned with their parsed contents when earlier selections have left them as parser lookahead. E.g., given `<title>One</title><p id=hit>Full</p><p>Next</p>`, selecting `title` and then `#hit` now advances the partial lookahead and returns `<p id="hit">Full</p>`, rather than returning an empty `<p id="hit"></p>` before its content is parsed. The updated readiness tracking follows StreamParser's normal emission order across implicit HTML structure and parser recovery. [#2551](https://github.com/jhy/jsoup/pull/2551)
+* Improved consecutive `StreamParser.selectFirst(...)` calls during progressive parsing, so later matches are returned with their parsed contents when earlier selections had left them as parser lookahead. E.g., given `<title>One</title><p id=hit>Full</p><p>Next</p>`, selecting `title` and then `#hit` now advances the partial lookahead and returns `<p id="hit">Full</p>`, rather than returning an empty `<p id="hit"></p>` before its content is parsed. The updated readiness tracking follows StreamParser's normal emission order across implicit HTML structure and parser recovery. [#2551](https://github.com/jhy/jsoup/pull/2551)
 * Improved XML parser performance and memory use for documents with many nested namespace declarations by recording namespace changes within each element scope. [#2556](https://github.com/jhy/jsoup/pull/2556)
 * Improved `W3CDom` conversion performance for documents with many nested namespace declarations. The W3C converter now uses the same optimized namespace tracking as the XML parser. [#2559](https://github.com/jhy/jsoup/pull/2559)
 * Improved `W3CDom` XML conversion to retain processing instructions, comments outside the root element, and CDATA sections, which were previously dropped or converted to text. [#2572](https://github.com/jhy/jsoup/issues/2572)
 * DOM mutation methods, including child insertion and replacement, now reject operations that would create a cycle, such as making a node its own child or moving an ancestor beneath a descendant. [#2552](https://github.com/jhy/jsoup/issues/2552)
 * Added `Elements#before(Node)`, `after(Node)`, `prepend(Node)`, and `append(Node)` to match the existing HTML string methods. [#953](https://github.com/jhy/jsoup/issues/953)
-* XML serialization now repairs element and attribute names that start with an invalid character, rather than outputting `<null>` elements or dropping attributes. For example, an attribute named `1a` is written as `_1a`. Additional leading underscores keep repaired attribute names unique if they conflict with another attribute. [#2573](https://github.com/jhy/jsoup/issues/2573)
-* Large file-backed uploads through `Connection.requestBodyStream(InputStream)` now stream directly with the JDK `HttpClient` on Java 11+, rather than being loaded fully into memory first.
+* Large file-backed uploads through `Connection.requestBodyStream(InputStream)` now stream directly with the JDK `HttpClient` on Java 11+, rather than being loaded fully into memory first. [#2575](https://github.com/jhy/jsoup/pull/2576)
 * Extended Java 11+ HTTP client reuse from requests sharing a `Jsoup.newSession()` to ordinary `Jsoup.connect(...)` calls, reducing transport thread and connection setup churn under sustained request loads. Sessions with custom authentication or SSL contexts continue to use their own client. [#2584](https://github.com/jhy/jsoup/pull/2584)
 
 ### Changes
-* Aligned the XML parser stack depth and lookups to the configured maximum, which now defaults to 512 for both HTML and XML. [#2570](https://github.com/jhy/jsoup/pull/2570)
+* Aligned the XML parser stack depth and lookups to the configured maximum, which now defaults to 512 for both HTML and XML. Use `Parser#setMaxDepth(int)` to configure. [#2570](https://github.com/jhy/jsoup/pull/2570)
 
 ### Bug Fixes
 * Fixed `W3CDom` namespace conversion in several cases: [#2559](https://github.com/jhy/jsoup/pull/2559)
@@ -25,13 +24,14 @@
   * Valid HTML names that are not XML QNames, such as `a:b:c`, are normalized. Attributes that still cannot be represented are skipped, and unrepresentable elements no longer change the surrounding tree.
 * Fixed `W3CDom` conversion of programmatically created or renamed elements whose names can be represented in a jsoup HTML DOM but are not valid XML names, such as `1abc`. These names are now normalized (e.g. `_1abc`) instead of causing a `NullPointerException`. [#2560](https://github.com/jhy/jsoup/issues/2560)
 * Fixed XML doctype serialization when a system identifier contains a double quote, which could otherwise produce invalid XML. [#2571](https://github.com/jhy/jsoup/issues/2571)
+* XML serialization now repairs element and attribute names that start with an invalid character, rather than outputting `null` elements or dropping attributes. For example, an attribute named `1a` is written as `_1a`. Additional leading underscores keep repaired attribute names unique if they conflict with another attribute. [#2573](https://github.com/jhy/jsoup/issues/2573)
 * Supplementary Unicode characters are now escaped correctly when serializing with non-UTF, non-ASCII output charsets such as ISO-8859-1. Previously, characters could be emitted unescaped when their low 16-bit value was representable by the configured charset, causing replacement or corruption when the output was encoded. [#2578](https://github.com/jhy/jsoup/issues/2578)
-* Fixed the JDK `HttpClient` implementation to accept responses without a `Content-Type` header, matching the `HttpURLConnection` implementation. [#2549](https://github.com/jhy/jsoup/pull/2549)
+* Fixed the JDK `HttpClient` implementation to accept responses missing a `Content-Type` header, matching the `HttpURLConnection` implementation. [#2549](https://github.com/jhy/jsoup/pull/2549)
 * Fixed HTTP response content-type matching to handle media types case-insensitively and recognize structured `+xml` suffixes, including vendor-specific media types. [#2550](https://github.com/jhy/jsoup/pull/2550)
 * HTTP request URL normalization now percent-encodes ASCII control characters, DEL, and embedded fragment delimiters, keeping normalized URLs valid for HTTP requests while preserving existing escapes. [#2585](https://github.com/jhy/jsoup/pull/2585)
 * Corrected multipart form encoding to percent-escape CR and LF in field names and filenames, matching the HTML form submission specification. Multipart file content-types containing CR or LF are now rejected with a `ValidationException`. [#2555](https://github.com/jhy/jsoup/pull/2555)
 * Aligned trailing comment placement with the HTML specification: comments after `</body>` remain children of the `html` element, while comments after `</html>` remain children of the document. [#2557](https://github.com/jhy/jsoup/pull/2557)
-* When using the optional `re2j` regular expression engine, heap exhaustion caused by complex selector patterns during matching is now normalized to a `ValidationException` with a `Pattern complexity error` message.
+* When using the optional `re2j` regular expression engine, memory allocation errors caused by complex selector patterns at match time are now normalized to a `ValidationException` with a `Pattern complexity error` message.
 * Fixed parsing of malformed SVG and MathML content so that breakout HTML tags are placed according to the HTML specification. [#2562](https://github.com/jhy/jsoup/issues/2562)
 * Fixed deeply nested malformed HTML parsing that could lose the document body because stack lookups did not align to the configured maximum parser depth. [#2569](https://github.com/jhy/jsoup/pull/2569)
 * Aligned RCDATA, RAWTEXT, and script-data parsing with the HTML specification: malformed end tags no longer consume following markup, unclosed `title`/`textarea` content stays text through EOF, and custom text tags match exact names. [#2577](https://github.com/jhy/jsoup/pull/2577)
